@@ -10,12 +10,14 @@ class PEFTPromptTuningModel:
         
         # Load tokenizer and model
         self.tokenizer = T5Tokenizer.from_pretrained(config.model_name)
+        self.tokenizer.add_special_tokens({'additional_special_tokens': ['\n']})
         self.tokenizer.padding_side = "left"
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.base_model = T5ForConditionalGeneration.from_pretrained(
             config.model_name,
             torch_dtype=torch.float32
         )
+        self.base_model.resize_token_embeddings(len(self.tokenizer))
         
         # Configure PEFT for T5
         self.peft_config = PromptTuningConfig(
@@ -43,18 +45,20 @@ class PEFTPromptTuningModel:
     def save_pretrained(self, save_directory):
         """Save the PEFT adapter"""
         self.model.save_pretrained(save_directory)
+        self.tokenizer.save_pretrained(save_directory)
         
     @classmethod
     def load_pretrained(cls, config: Config, adapter_path: str):
         """Load a trained PEFT model"""
         # Load tokenizer
-        tokenizer = T5Tokenizer.from_pretrained(config.model_name)
+        tokenizer = T5Tokenizer.from_pretrained(adapter_path)
         
         # Load base model
         base_model = T5ForConditionalGeneration.from_pretrained(
             config.model_name,
             torch_dtype=torch.float32
         )
+        base_model.resize_token_embeddings(len(tokenizer))
         
         # Load PEFT model
         model = PeftModel.from_pretrained(base_model, adapter_path)
