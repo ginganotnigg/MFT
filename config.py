@@ -5,10 +5,10 @@ from typing import List
 @dataclass
 class Config:
     # FLAN-T5 large model
-    model_name: str = "google/flan-t5-large"
-    batch_size: int = 4
-    learning_rate: float = 1e-3
-    epochs: int = 1
+    model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
+    batch_size: int = 1
+    learning_rate: float = 5e-4
+    epochs: int = 3
     
     # PEFT-specific configurations
     peft_type: str = "PROMPT_TUNING"
@@ -23,7 +23,7 @@ class Config:
         "1. Which SQL clause is used to filter records that satisfy a specified condition?\n"
         "2. What does ACID stand for in the context of database transactions?\n"
         "3. In a relational database, what is a primary key used for?\n\n"
-
+    
         "Example 2 Input:\n"
         "Generate 4 multiple-choice technical questions in English about Operating Systems suitable for Junior level developers. "
         "Context: An operating system (OS) is system software that manages computer hardware and software resources and provides common services for computer programs. All computer programs, excluding firmware, require an operating system to function.\n"
@@ -32,11 +32,12 @@ class Config:
         "2. What is the main purpose of virtual memory in an OS?\n"
         "3. Which of the following is NOT a type of operating system?\n"
         "4. What is the difference between a process and a thread?\n\n"
-
-        "Now, generate exactly {length} {question_type} technical questions in {language} about {topic} for {seniority} developers. "
+    
+        "Now, generate exactly {length} {question_type} technical questions in {language} about {topic} for {seniority} developers.\n"
         "Context: {context}\n"
-        "Format: Numbered list (1., 2., 3.) with one question per line.\n"
-        "Questions:\n"
+        "Instructions: Provide a clean, numbered list of questions only (no options or answers). Each question should be concise, focused, and suitable for the specified level.\n"
+        "Format: Start with '1.' and continue numbering (e.g., 2., 3., ...). Place one question per line.\n"
+        "Questions:\n1."
     )
     
     # Dataset configuration
@@ -56,8 +57,8 @@ class Config:
     max_target_length: int = 512
     
     # Enhanced generation parameters
-    num_beams: int = 6
-    temperature: float = 0.9
-    top_p: float = 0.95
-    repetition_penalty: float = 1.2
-    max_new_tokens: int = 512
+    num_beams: int = 2
+    temperature: float = 0.8
+    top_p: float = 0.9
+    repetition_penalty: float = 1.1
+    max_new_tokens: int = 256

@@ -147,7 +147,7 @@ class QuestionDataset:
         base_instruction += f" {type_specific_info['format_instruction']}"
         base_instruction += f" {type_specific_info['quality_guidelines']}"
         
-        input_text = base_instruction
+        input_text = base_instruction + " Questions:\n1."
         
         # Target: clean numbered list of questions with type-appropriate fallbacks
         if questions:
@@ -239,30 +239,22 @@ class QuestionDatasetWrapper(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         question = self.questions[idx]
         input_text, target_text = self.dataset_processor.format_input_output(question)
-        
-        # Tokenize input
-        input_encoding = self.tokenizer(
-            input_text,
-            max_length=self.config.max_source_length,
+        full_text = input_text + target_text
+
+        encoding = self.tokenizer(
+            full_text,
+            max_length=self.config.max_source_length + self.config.max_target_length,
             padding='max_length',
             truncation=True,
-            return_tensors='pt'
+            return_tensors='pt',
+            pad_to_multiple_of=8,
         )
-        
-        # Tokenize target
-        target_encoding = self.tokenizer(
-            target_text,
-            max_length=self.config.max_target_length,
-            padding='max_length',
-            truncation=True,
-            return_tensors='pt'
-        )
-        
-        input_ids = input_encoding['input_ids'].squeeze()
-        attention_mask = input_encoding['attention_mask'].squeeze()
-        labels = target_encoding['input_ids'].squeeze()
-        
-        # Replace padding token ids in labels with -100 (ignored by loss function)
+
+        input_ids = encoding['input_ids'].squeeze()
+        attention_mask = encoding['attention_mask'].squeeze()
+
+        # For causal LM, labels = input_ids with padding tokens masked out
+        labels = input_ids.clone()
         labels[labels == self.tokenizer.pad_token_id] = -100
         
         return {
@@ -294,12 +286,6 @@ def get_question_type_instructions(question_type: str) -> dict:
                 'quality_guidelines': 'Questions should be open-ended but focused, requiring concise explanations rather than yes/no answers. Avoid questions that need lengthy explanations.'
             },
             
-            'True/False': {
-                'type_description': 'true/false',
-                'format_instruction': 'Present your response as a numbered list where each line contains one statement that can be evaluated as either true or false.',
-                'quality_guidelines': 'Create clear, unambiguous statements about the topic. Avoid statements that are partially true or context-dependent.'
-            },
-            
             'Fill in the Blank': {
                 'type_description': 'fill in the blank',
                 'format_instruction': 'Present your response as a numbered list where each line contains one sentence with a blank space (___) to be filled.',
@@ -311,12 +297,6 @@ def get_question_type_instructions(question_type: str) -> dict:
                 'format_instruction': 'Present your response as a numbered list where each line contains one question about completing or fixing code snippets.',
                 'quality_guidelines': 'Focus on practical coding scenarios that require understanding of syntax, logic, or best practices. Questions should be specific to coding tasks.'
             },
-            
-            'Scenario-Based': {
-                'type_description': 'scenario-based',
-                'format_instruction': 'Present your response as a numbered list where each line contains one question presenting a real-world scenario that requires problem-solving.',
-                'quality_guidelines': 'Create realistic workplace or project scenarios that test practical application of knowledge. Questions should require analytical thinking and decision-making.'
-            }
         }
         
         # Default configuration for unknown question types

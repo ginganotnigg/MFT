@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Data, logs
+*.log
+*.out
+*.tmp
+*.cache
+logs/
+wandb/
+runs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Git and version control
+.git/
+.gitignore
+
+# Model checkpoints (if not needed in image)
+*.ckpt
+*.pt
+*.bin
+
+# Other
+*.tar
+*.tar.gz
+*.zip
+*.egg-info/
+dist/
+build/
