@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  mft-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mft:latest
+    container_name: mft-app
+    ports:
+      - "7777:7777"
+    restart: unless-stopped
