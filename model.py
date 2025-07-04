@@ -9,15 +9,16 @@ class PEFTPromptTuningModel:
         self.config = config
 
         # Load tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(config.model_name, trust_remote_code=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(config.model_path, trust_remote_code=True, local_files_only=True)
         self.tokenizer.padding_side = "right"  # causal LM usually pads right
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
         self.base_model = AutoModelForCausalLM.from_pretrained(
-            config.model_name,
+            config.model_path,
             torch_dtype=torch.float32,
-            trust_remote_code=True  # Qwen models require this
+            trust_remote_code=True,
+            local_files_only=True
         )
 
         # Configure PEFT for causal LM
@@ -26,7 +27,7 @@ class PEFTPromptTuningModel:
             prompt_tuning_init=config.prompt_tuning_init,
             num_virtual_tokens=config.num_virtual_tokens,
             prompt_tuning_init_text=config.prompt_tuning_init_text,
-            tokenizer_name_or_path=config.model_name,
+            tokenizer_name_or_path=config.model_path,
         )
 
         self.model = get_peft_model(self.base_model, self.peft_config)
@@ -44,14 +45,15 @@ class PEFTPromptTuningModel:
         self.model.save_pretrained(save_directory)
 
     @classmethod
-    def load_pretrained(cls, config: Config, adapter_path: str):
-        tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+    def load_pretrained(cls, config: Config):
+        tokenizer = AutoTokenizer.from_pretrained(config.model_path, local_files_only=True, trust_remote_code=True)
         base_model = AutoModelForCausalLM.from_pretrained(
-            config.model_name,
+            config.model_path,
             torch_dtype=torch.float32,
+            local_files_only=True,
             trust_remote_code=True
         )
-        model = PeftModel.from_pretrained(base_model, adapter_path)
+        model = PeftModel.from_pretrained(base_model, config.model_path, local_files_only=True)
         instance = cls.__new__(cls)
         instance.config = config
         instance.tokenizer = tokenizer

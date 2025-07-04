@@ -1,0 +1,17 @@
+{
+  "auto_mapping": null,
+  "base_model_name_or_path": "final_model",
+  "inference_mode": true,
+  "num_attention_heads": 12,
+  "num_layers": 28,
+  "num_transformer_submodules": 1,
+  "num_virtual_tokens": 30,
+  "peft_type": "PROMPT_TUNING",
+  "prompt_tuning_init": "TEXT",
+  "prompt_tuning_init_text": "Here are some examples of generating technical questions:\n\nExample 1 Input:\nGenerate 3 multiple-choice technical questions in English about Databases suitable for Intern level developers. Context: SQL (Structured Query Language) is a domain-specific language used in programming and designed for managing data held in a relational database management system (RDBMS), or for stream processing in a relational data stream management system (RDSMS). It is particularly useful for handling structured data where there are relations between different entities/tables.\nExample 1 Output:\n1. Which SQL clause is used to filter records that satisfy a specified condition?\n2. What does ACID stand for in the context of database transactions?\n3. In a relational database, what is a primary key used for?\n\nExample 2 Input:\nGenerate 4 multiple-choice technical questions in English about Operating Systems suitable for Junior level developers. Context: An operating system (OS) is system software that manages computer hardware and software resources and provides common services for computer programs. All computer programs, excluding firmware, require an operating system to function.\nExample 2 Output:\n1. Which of the following is a primary function of an operating system?\n2. What is the main purpose of virtual memory in an OS?\n3. Which of the following is NOT a type of operating system?\n4. What is the difference between a process and a thread?\n\nNow, generate exactly {length} {question_type} technical questions in {language} about {topic} for {seniority} developers.\nContext: {context}\nInstructions: Provide a clean, numbered list of questions only (no options or answers). Each question should be concise, focused, and suitable for the specified level.\nFormat: Start with '1.' and continue numbering (e.g., 2., 3., ...). Place one question per line.\nQuestions:\n1.",
+  "revision": null,
+  "task_type": "CAUSAL_LM",
+  "token_dim": 1536,
+  "tokenizer_kwargs": null,
+  "tokenizer_name_or_path": "final_model"
+}

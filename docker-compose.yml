@@ -9,4 +9,10 @@ services:
     container_name: mft-app
     ports:
       - "7777:7777"
+    environment:
+      - HF_HOME=/workspace/.cache/huggingface
+      - TRANSFORMERS_OFFLINE=1
+    volumes:
+      - ./final_model:/workspace/final_model:ro
     restart: unless-stopped
+    working_dir: /workspace

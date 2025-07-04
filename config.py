@@ -6,6 +6,7 @@ from typing import List
 class Config:
     # FLAN-T5 large model
     model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
+    model_path: str = "final_model"  # Local path for offline inference
     batch_size: int = 1
     learning_rate: float = 5e-4
     epochs: int = 3
