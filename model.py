@@ -1,7 +1,7 @@
 # model.py
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, DataCollatorForLanguageModeling
-from peft import get_peft_model, PromptTuningConfig, TaskType, PeftModel
+from peft import get_peft_model, PromptTuningConfig, TaskType, PeftConfig
 from config import Config
 
 class PEFTPromptTuningModel:
@@ -16,22 +16,18 @@ class PEFTPromptTuningModel:
 
         self.base_model = AutoModelForCausalLM.from_pretrained(
             config.model_path,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.float16,
             trust_remote_code=True,
             local_files_only=True
         )
 
         # Configure PEFT for causal LM
-        self.peft_config = PromptTuningConfig(
-            task_type=TaskType.CAUSAL_LM,
-            prompt_tuning_init=config.prompt_tuning_init,
-            num_virtual_tokens=config.num_virtual_tokens,
-            prompt_tuning_init_text=config.prompt_tuning_init_text,
-            tokenizer_name_or_path=config.model_path,
+        self.peft_config = PeftConfig.from_pretrained(
+            config.model_path, trust_remote_code=True, local_files_only=True
         )
 
+        # Attach the prompt adapter
         self.model = get_peft_model(self.base_model, self.peft_config)
-
         self.model.print_trainable_parameters()
 
     def forward(self, input_ids, attention_mask, labels=None):
@@ -49,11 +45,14 @@ class PEFTPromptTuningModel:
         tokenizer = AutoTokenizer.from_pretrained(config.model_path, local_files_only=True, trust_remote_code=True)
         base_model = AutoModelForCausalLM.from_pretrained(
             config.model_path,
-            torch_dtype=torch.float32,
+            torch_dtype=torch.float16,
             local_files_only=True,
             trust_remote_code=True
         )
-        model = PeftModel.from_pretrained(base_model, config.model_path, local_files_only=True)
+        peft_config = PeftConfig.from_pretrained(
+            config.model_path, trust_remote_code=True, local_files_only=True
+        )
+        model = get_peft_model(base_model, peft_config)
         instance = cls.__new__(cls)
         instance.config = config
         instance.tokenizer = tokenizer
