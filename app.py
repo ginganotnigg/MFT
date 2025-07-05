@@ -42,8 +42,8 @@ config = Config()
 @app.on_event("startup")
 def load_model():
     global model, device, config
-    model = PEFTPromptTuningModel.load_pretrained(config)
-    device = "cpu"
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = PEFTPromptTuningModel.load_pretrained(config, device=device)
     model = model.to(device)
 
 @app.get("/health")

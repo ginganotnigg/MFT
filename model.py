@@ -5,9 +5,10 @@ from peft import get_peft_model, PromptTuningConfig, TaskType, PeftConfig
 from config import Config
 
 class PEFTPromptTuningModel:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, device=None):
         self.config = config
-
+        self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
         self.tokenizer = AutoTokenizer.from_pretrained(
             config.model_path, trust_remote_code=True, local_files_only=True
         )
@@ -27,6 +28,7 @@ class PEFTPromptTuningModel:
         )
 
         self.model = get_peft_model(self.base_model, self.peft_config)
+        self.model = self.model.to(self.device)
         self.model.print_trainable_parameters()
 
     @classmethod
@@ -75,4 +77,5 @@ class PEFTPromptTuningModel:
 
     def to(self, device):
         self.model = self.model.to(device)
+        self.device = device
         return self
