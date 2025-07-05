@@ -13,6 +13,7 @@ services:
       - HF_HOME=/workspace/.cache/huggingface
       - TRANSFORMERS_OFFLINE=1
     volumes:
-      - ./final_model:/workspace/final_model:ro
+      - ./base_model:/workspace/base_model:ro
+      - ./adapter:/workspace/adapter:ro
     restart: unless-stopped
     working_dir: /workspace

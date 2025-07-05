@@ -1,6 +1,6 @@
 {
   "auto_mapping": null,
-  "base_model_name_or_path": "final_model",
+  "base_model_name_or_path": "base_model",
   "inference_mode": true,
   "num_attention_heads": 12,
   "num_layers": 28,
@@ -13,5 +13,5 @@
   "task_type": "CAUSAL_LM",
   "token_dim": 1536,
   "tokenizer_kwargs": null,
-  "tokenizer_name_or_path": "final_model"
+  "tokenizer_name_or_path": "base_model"
 }

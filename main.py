@@ -127,7 +127,7 @@ def generate_multitopic_question_list(test_spec, model=None, config=None):
 
 def main():
     config = Config()
-    adapter_path = f"{config.output_dir}/final_model"
+    adapter_path = f"{config.output_dir}/base_model"
     model = PEFTPromptTuningModel.load_pretrained(config, adapter_path)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)

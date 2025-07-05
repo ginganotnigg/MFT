@@ -12,9 +12,7 @@ WORKDIR /workspace
 COPY requirements.txt .
 
 # Install CPU-only PyTorch and other dependencies
-RUN pip install --upgrade pip && \
-    pip install torch==2.3.0+cpu --index-url https://download.pytorch.org/whl/cpu && \
-    pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy your code and model files
 COPY . .

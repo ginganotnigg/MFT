@@ -8,9 +8,10 @@ class PEFTPromptTuningModel:
     def __init__(self, config: Config):
         self.config = config
 
-        # Load tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(config.model_path, trust_remote_code=True, local_files_only=True)
-        self.tokenizer.padding_side = "right"  # causal LM usually pads right
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            config.model_path, trust_remote_code=True, local_files_only=True
+        )
+        self.tokenizer.padding_side = "right"
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
@@ -21,28 +22,18 @@ class PEFTPromptTuningModel:
             local_files_only=True
         )
 
-        # Configure PEFT for causal LM
         self.peft_config = PeftConfig.from_pretrained(
-            config.model_path, trust_remote_code=True, local_files_only=True
+            config.adapter_path, trust_remote_code=True, local_files_only=True
         )
 
-        # Attach the prompt adapter
         self.model = get_peft_model(self.base_model, self.peft_config)
         self.model.print_trainable_parameters()
 
-    def forward(self, input_ids, attention_mask, labels=None):
-        return self.model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels
-        )
-
-    def save_pretrained(self, save_directory):
-        self.model.save_pretrained(save_directory)
-
     @classmethod
     def load_pretrained(cls, config: Config):
-        tokenizer = AutoTokenizer.from_pretrained(config.model_path, local_files_only=True, trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(
+            config.model_path, local_files_only=True, trust_remote_code=True
+        )
         base_model = AutoModelForCausalLM.from_pretrained(
             config.model_path,
             torch_dtype=torch.float16,
@@ -50,7 +41,7 @@ class PEFTPromptTuningModel:
             trust_remote_code=True
         )
         peft_config = PeftConfig.from_pretrained(
-            config.model_path, trust_remote_code=True, local_files_only=True
+            config.adapter_path, trust_remote_code=True, local_files_only=True
         )
         model = get_peft_model(base_model, peft_config)
         instance = cls.__new__(cls)
