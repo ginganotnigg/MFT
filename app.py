@@ -6,6 +6,7 @@ from model import PEFTPromptTuningModel
 from config import Config
 import torch
 import uvicorn
+import logging
 
 class DifficultyDistribution(BaseModel):
     Intern: Optional[int] = 0
@@ -23,7 +24,6 @@ class Context(BaseModel):
     links: List[str] = []
 
 class SuggestExamQuestionRequest(BaseModel):
-    question_type: str
     language: str
     topics: List[Topic]
     creativity: Optional[int] = 5
@@ -31,6 +31,9 @@ class SuggestExamQuestionRequest(BaseModel):
 
 class SuggestExamQuestionResponse(BaseModel):
     questions: List[str]
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -41,10 +44,15 @@ config = Config()
 
 @app.on_event("startup")
 def load_model():
-    global model, device, config
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = PEFTPromptTuningModel.load_pretrained(config, device=device)
-    model = model.to(device)
+    try:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        logger.info(f"Using device: {device}")
+        model = PEFTPromptTuningModel.load_pretrained(config, device=device)
+        model = model.to(device)
+        logger.info("Model loaded successfully.")
+    except Exception as e:
+        logger.error(f"Failed to load model: {e}", exc_info=True)
+        raise RuntimeError("Model loading failed") from e
 
 @app.get("/health")
 async def health():
@@ -52,34 +60,41 @@ async def health():
 
 @app.post("/generate", response_model=SuggestExamQuestionResponse)
 async def generate_questions(request: SuggestExamQuestionRequest):
-    topics = []
-    for topic in request.topics:
-        difficulties = {}
-        num_questions = 0
-        dd = topic.difficultyDistribution
-        for level in ["Intern", "Junior", "Middle", "Senior", "Lead"]:
-            val = getattr(dd, level, 0)
-            if val:
-                difficulties[level] = val
-                num_questions += val
-        topics.append({
-            "topic": topic.name,
-            "num_questions": num_questions,
-            "difficulties": difficulties
-        })
+    try:
+        topics = []
+        for topic in request.topics:
+            difficulties = {}
+            num_questions = 0
+            dd = topic.difficultyDistribution
+            for level in ["Intern", "Junior", "Middle", "Senior", "Lead"]:
+                val = getattr(dd, level, 0)
+                if val:
+                    difficulties[level] = val
+                    num_questions += val
+            topics.append({
+                "topic": topic.name,
+                "num_questions": num_questions,
+                "difficulties": difficulties
+            })
 
-    test_spec = {
-        "language": request.language,
-        "question_type": request.question_type,
-        "context": request.context.text if request.context else "",
-        "topics": topics
-    }
+        test_spec = {
+            "language": request.language,
+            "question_type": getattr(request, "question_type", "Multiple Choice"),
+            "context": request.context.text if request.context else "",
+            "topics": topics
+        }
 
-    questions = generate_multitopic_question_list(test_spec, model=model, config=config)
+        logger.info(f"Received generation request: {test_spec}")
 
-    del test_spec
+        questions = generate_multitopic_question_list(test_spec, model=model, config=config)
 
-    return SuggestExamQuestionResponse(questions=questions)
+        del test_spec
+
+        logger.info(f"Generated {len(questions)} questions.")
+        return SuggestExamQuestionResponse(questions=questions)
+    except Exception as e:
+        logger.error(f"Error during question generation: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7777, log_level="info")
